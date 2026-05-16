@@ -14,7 +14,7 @@ function App() {
   const [summary, setSummary] = useState(null);
   const [message, setMessage] = useState("");
 
-  const FUNCTION_URL = process.env.REACT_APP_FUNCTION_URL;
+  const FUNCTION_URL = "http://candidatefuncapp-bucnf6cugxccbrh9.southindia-01.azurewebsites.net";
 
   const handleChange = (e) => {
     setFormData({
