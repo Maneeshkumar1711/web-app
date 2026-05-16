@@ -1,8 +1,9 @@
-name: Build and deploy Python app to Azure Web App - candidatewebapp
+name: Build and deploy React app to Azure Web App - candidatewebapp
 
 on:
   push:
     branches:
+      - main
       - master
   workflow_dispatch:
 
@@ -12,38 +13,41 @@ jobs:
     permissions:
       contents: read
 
+    defaults:
+      run:
+        working-directory: ./web-app
+
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python version
-        uses: actions/setup-python@v5
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          python-version: '3.14'
+          node-version: '20'
 
-      - name: Create and Start virtual environment and Install dependencies
-        working-directory: ./web-app
-        run: |
-          python -m venv antenv
-          source antenv/bin/activate
-          pip install -r requirements.txt
+      - name: Install dependencies
+        run: npm install
 
-      - name: Upload artifact for deployment jobs
+      - name: Build React app
+        env:
+          REACT_APP_FUNCTION_URL: https://candidatefuncapp.azurewebsites.net
+        run: npm run build
+
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: python-app
-          path: |
-            web-app
-            !web-app/antenv/
+          name: react-app
+          path: web-app/build
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
 
     steps:
-      - name: Download artifact from build job
+      - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: python-app
+          name: react-app
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
@@ -51,3 +55,4 @@ jobs:
           app-name: candidatewebapp
           slot-name: Production
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_64AEF982D9824430A854575777E9D8A5 }}
+          package: .
